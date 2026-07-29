@@ -27,7 +27,8 @@ dependencies = [
 dev = [
     "black>=24.0.0",
     "isort>=5.13.0",
-    "radon>=7.0.0"]
+    "radon>=7.0.0",
+    "responses"]
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["dp_tools"]
