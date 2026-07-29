@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "demand-tools"
-version = "0.2.7"
+version = "0.2.8"
 description = "Набор функций для работы с датафреймами и загрузки данных"
 requires-python = ">=3.9"
 readme = "README.md"
