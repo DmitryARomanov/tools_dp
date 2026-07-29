@@ -45,7 +45,10 @@ jobs:
           python-version: "3.14"
 
       - name: Install dependencies
-        run: pip install build pytest black flake8
+        run: |
+          pip install --upgrade pip
+          pip install .
+          pip install build pytest black flake8
 
       - name: Lint
         run: black --target-version py314 --check . && flake8 --max-line-length=140 .
