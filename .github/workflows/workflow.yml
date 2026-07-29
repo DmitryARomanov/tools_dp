@@ -12,6 +12,9 @@ jobs:
   dev-ci:
     name: Run to PyTest
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
     if: ${{ github.ref == 'refs/heads/dev' }}
     steps:
       - uses: actions/checkout@v6
@@ -29,19 +32,19 @@ jobs:
       - name: Lint
         run: black --target-version py314 --check . && flake8 --max-line-length=140 .
 
-      - name: Test
+      - name: Run PyTest
         run: |
           pytest -v \
-          --junitxml=test-results.xml \
-          --tb=short
+            --junitxml=${{ github.workspace }}/test-result.xml \
+            --tb=short
         env:
           PYTEST_ADDOPTS: "-p no:warnings"
 
-      - name: Publish Test Results to GitHub
+      - name: Publish Test Results
         uses: mikepenz/action-junit-report@v4
         if: always()
         with:
-          report_paths: \${{ github.workspace }}/test-result.xml
+          report_paths: ${{ github.workspace }}/test-result.xml
           check_name: PyTest Results
 
   build:
