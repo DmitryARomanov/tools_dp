@@ -37,6 +37,12 @@ jobs:
         env:
           PYTEST_ADDOPTS: "-p no:warnings"
 
+      - name: Publish Test Results
+        uses: actions/junit-reporter@v6
+        with:
+          report_paths: 'test-result.xml'
+          check_name: PyTest Results
+
   build:
     name: Build distribution 📦
     needs: [dev-ci]
