@@ -18,4 +18,4 @@ __all__ = [
     "rebuild_loss_data",
     "iqr_flag_series",
 ]
-__version__ = "0.2.8"
+__version__ = "0.2.9"
