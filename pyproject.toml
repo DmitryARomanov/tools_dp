@@ -21,9 +21,10 @@ authors = [
 ]
 license = { text = "MIT" }
 dependencies = [
-    "pandas>=2.0.0",
-    "tqdm>=4.66.0",
-    "requests>=2.32.0"
+    "pandas",
+    "numpy",
+    "tqdm",
+    "requests"
 ]
 
 [project.optional-dependencies]
@@ -36,4 +37,12 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["dp_tools"]
+
+
+[tool.black]
+target-version = ["py314"]
+line-length = 88
+
+[tool.flake8]
+max-line-length = 88
 
