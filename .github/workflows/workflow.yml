@@ -32,7 +32,7 @@ jobs:
       - name: Test
         run: |
           pytest -v \
-          --junitxml-test-result.xml \
+          --junitxml=test-results.xml \
           --tb=short
         env:
           PYTEST_ADDOPTS: "-p no:warnings"
