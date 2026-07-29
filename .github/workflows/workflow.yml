@@ -33,20 +33,23 @@ jobs:
           path: dist/
 
   dev-ci:
-    name: Run to PyTest 🧪
+    name: Run to PyTest
     needs: [build]
-    runs-on: ububtu-latest
-    if: github.refs == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/dev')
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.14"
+
       - name: Install dependencies
         run: pip install build pytest black flake8
+
       - name: Lint
         run: black --check . && flake8 .
+
       - name: Test
         run: pytest
 
@@ -54,7 +57,7 @@ jobs:
     name: Publish to TestPyPI 🧪
     needs: [build]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref_type == 'tag'
+    if: ${{ github.ref == 'refs/heads/main' }}
     env:
       TWINE_USERNAME: __token__
       TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
