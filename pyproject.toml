@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dp_tools"
+version = "0.2.5"
+description = "Набор функций для работы датафреймами и загрузки данных"
+requires-python = ">=3.9"
+authors = [
+  {name = "Dmitry Romanov"}
+]
+dependencies = [
+    "pandas",
+    "tqdm",
+    "requests",
+    "subprocess",
+    "sys"
+]
+license = "MIT"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["dp_tools"]
+exclude = ["my_module*", "*.ipynb", "__pycache__*"]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "isort",
+    "radon"
+]

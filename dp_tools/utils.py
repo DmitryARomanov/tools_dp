@@ -1,0 +1,201 @@
+import pandas as pd
+from tqdm import tqdm
+import os
+
+def report_nan(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Формирует отчёт по количеству пропущенных и «пустых» значений в DataFrame.
+
+    Для каждой колонки подсчитывается:
+      - `na_count`: количество значений, распознанных как NA/NaN/None;
+      - `blank_count`: количество ячеек, содержащих пустую строку, строку из пробелов
+        или маркер '(blank)'.
+
+    Возвращаемый DataFrame позволяет быстро оценить качество данных перед дальнейшей
+    обработкой или загрузкой в хранилище (например, в ClickHouse), а также может
+    использоваться как часть валидации при пайплайне обработки Excel‑файлов.
+
+    Параметры
+    ---------
+    df : pd.DataFrame
+        Исходный DataFrame, по которому требуется сформировать отчёт.
+
+    Возвращает
+    ----------
+    pd.DataFrame
+        Таблица с колонками:
+          - ``column_name``: имя колонки исходного DataFrame;
+          - ``na_count``: количество NA‑значений в колонке;
+          - ``blank_count``: количество «пустых» значений (пустая строка, пробелы, '(blank)').
+
+        Строки результата соответствуют колонкам исходного DataFrame в порядке их следования.
+
+    Примечания
+    ----------
+    - Логика определения «пустого» значения учитывает несколько распространённых случаев:
+        пустая строка ``''``, строка, состоящая только из пробелов, и явный маркер ``'(blank)'``.
+    - Для нечисловых колонок проверка на пробелы выполняется через строковое представление.
+    """
+    report = []
+    for i in df.columns:
+        if pd.api.types.is_object_dtype(df[i]) or pd.api.types.is_string_dtype(df[i]):
+            s = df[i].astype(str)
+            is_blank = (s == '') | (s.str.strip() == '') | (df[i] == '(blank)')
+        else:
+            is_blank = df[i] == '(blank)'
+
+        report.append({
+            "column_name": i,
+            "na_count": int(df[i].isna().sum()),
+            "blank_count": int(is_blank.sum())
+        })
+
+    return pd.DataFrame(report)
+
+def create_df_from_folder(folder_path:str, sheet_name: str | int = 0, dtype: dict | None = None) -> pd.DataFrame:
+    """
+    Считывает все файлы ``.xlsx`` из указанной папки и объединяет их в единый DataFrame.
+
+    Для каждого файла данные загружаются с заданного листа (параметр `sheet_name`),
+    после чего все полученные DataFrame конкатенируются в одну таблицу. Процесс
+    сопровождается прогресс‑баром для наглядного отслеживания хода обработки.
+
+    Параметры
+    ---------
+    folder_path : str
+        Путь к папке, в которой производится поиск файлов с расширением ``.xlsx``.
+        Если папка не существует, функция вернёт пустой DataFrame.
+    sheet_name : str | int, default 0
+        Имя или индекс листа, который будет прочитан из каждого Excel‑файла.
+        По умолчанию используется первый лист (индекс 0).
+    dtype : dict | None, default None
+        Словарь для явного задания типов данных колонок в формате ``{<имя_колонки>: <тип>}``.
+        Передаётся напрямую в `pd.read_excel`. Если не указан, типы определяются автоматически.
+
+    Возвращает
+    ----------
+    pd.DataFrame
+        Объединённый DataFrame, содержащий данные из всех найденных Excel‑файлов.
+        Индексы строк сбрасываются, чтобы обеспечить непрерывную нумерацию.
+        Если в папке нет файлов ``.xlsx`` или папка не найдена, возвращается пустой DataFrame.
+
+    Примеры
+    --------
+    Чтение всех файлов из папки с явным указанием типа для колонки ``amount``:
+
+    >>> df = create_df_from_folder("./reports", sheet_name="Data", dtype={"amount": "float64"})
+    >>> df.shape
+    (1234, 5)
+
+    Чтение с первого листа по умолчанию:
+
+    >>> df = create_df_from_folder("./monthly_data")
+    >>> len(df)
+    876
+    """
+
+    data_list =[]
+    if not os.path.exists(folder_path):
+        return pd.DataFrame()
+
+    file_xlsx = [f for f in os.listdir(folder_path) if f.endswith('.xlsx')]
+
+    with tqdm(total=len(file_xlsx), desc="Чтение Excel", unit="file") as pbar:
+        for fname in file_xlsx:
+            pbar.set_postfix({"File": fname[:40]})
+            filepath = os.path.join(folder_path, fname)
+            tmp = pd.read_excel(filepath, sheet_name=0, dtype=dtype)
+            data_list.append(tmp)
+
+            pbar.update(1)
+
+    return pd.concat(data_list) 
+
+def rebuild_loss_data(df: pd.DataFrame, index_col: list, column_name: str, value_name: str) -> pd.DataFrame:
+    """
+    Выполняет трансформацию данных о потерях через сводную таблицу с обработкой нулевых значений.
+
+    Функция реализует пайплайн преобразования «широкого» формата в «длинный» с промежуточной
+    агрегацией и заполнением пропусков:
+    1. Строит сводную таблицу (pivot) по заданным индексам и категориальному столбцу,
+       суммируя значения в целевой колонке.
+    2. Заменяет нулевые значения на NaN, чтобы исключить их из расчёта среднего.
+    3. Заполняет пропуски в каждой строке её средним арифметическим (по имеющимся данным).
+    4. Заменяет оставшиеся NaN (возникшие, если вся строка состояла из нулей) на 0.
+    5. Разворачивает сводную таблицу обратно в длинный формат (melt).
+
+    Параметры
+    ---------
+    df : pd.DataFrame
+        Исходный DataFrame с данными о потерях.
+    index_col : list
+        Список колонок, используемых в качестве индекса сводной таблицы (например, дата, регион).
+    column_name : str
+        Имя колонки, значения которой станут заголовками столбцов в сводной таблице
+        (например, категория товара или тип потери).
+    value_name : str
+        Имя колонки с числовыми значениями для агрегации и заполнения (например, сумма потерь).
+
+    Возвращает
+    ----------
+    pd.DataFrame
+        Преобразованный DataFrame в длинном формате. Содержит те же ключевые колонки,
+        что и на входе, но с агрегированными и скорректированными значениями.
+        Количество строк может отличаться от исходного из‑за агрегации и структуры сводной таблицы.
+
+    Примеры
+    --------
+    >>> result = rebuild_loss_data(
+    ...     df=losses_df,
+    ...     index_col=['date', 'region'],
+    ...     column_name='product_type',
+    ...     value_name='loss_amount'
+    ... )
+    >>> print(result.head())
+
+    Примечания
+    ----------
+    - Функция выводит в консоль количество строк до и после преобразования для контроля изменений.
+    - Стратегия заполнения пропусков: сначала по среднему значению строки, затем оставшиеся NaN — нулями.
+    - Нулевые значения на входе трактуются как отсутствующие данные (заменяются на NaN перед расчётом среднего).
+    - При отсутствии данных для какой‑либо комбинации индексов в сводной таблице появятся NaN,
+      которые будут обработаны согласно описанной стратегии.
+    """
+    pivot_df = pd.pivot_table(
+        df,
+        index=index_col,
+        columns=column_name,
+        values=value_name,
+        aggfunc='sum',
+    )
+
+    pivot_df = pivot_df.replace(0.0, np.nan)
+    pivot_df = pivot_df.apply(lambda row: row.fillna(row.mean()), axis=1)
+    pivot_df = pivot_df.fillna(0)
+
+    pivot_df_flat = pivot_df.reset_index()
+    pivot_df_flat = pd.melt(
+        pivot_df_flat,
+        id_vars=index_col,
+        var_name=column_name,
+        value_name=value_name
+    )
+
+    print(f"строк было: {len(df)}")
+    print(f"строк стало: {len(pivot_df_flat)}")
+
+    return pivot_df_flat
+
+def iqr_flag_series(s, k=1.5):
+    if len(s) < 4:
+        return pd.Series(0, index=s.index)
+    q1 = s.quantile(0.25)
+    q3 = s.quantile(0.75)
+    iqr = q3 - q1
+    if iqr == 0:
+        return pd.Series(0, index=s.index)
+    lower = q1 - k * iqr
+    upper = q3 + k * iqr
+    return ((s < lower) | (s > upper)).astype(int)
+
+
