@@ -1,9 +1,7 @@
 import pandas as pd
 
 
-def create_and_insert_df(
-    client, df: pd.DataFrame, table_name: str, order_by_cols: list | None = None
-):
+def create_and_insert_df(client, df: pd.DataFrame, table_name: str, order_by_cols: list | None = None):
     """
     Подготавливает и вставляет DataFrame в таблицу базы данных.
     Если таблица существует, происходит очистка таблицы и вставка данных.
@@ -64,11 +62,7 @@ def create_and_insert_df(
                 if not non_empty.empty:
                     first_val = non_empty.iloc[0]
                     if isinstance(first_val, pd.Timestamp):
-                        if (
-                            first_val.hour == 0
-                            and first_val.minute == 0
-                            and first_val.second == 0
-                        ):
+                        if first_val.hour == 0 and first_val.minute == 0 and first_val.second == 0:
                             ch_type = "Date"
                         else:
                             ch_type = "DateTime"
@@ -86,11 +80,7 @@ def create_and_insert_df(
 
             if make_nullable and ch_type not in ("Date", "DateTime", "DateTime64(3)"):
                 ch_type = f"Nullable({ch_type})"
-            elif (
-                has_nulls
-                and col_name not in order_by_cols
-                and ch_type in ("Date", "DateTime", "DateTime64(3)")
-            ):
+            elif has_nulls and col_name not in order_by_cols and ch_type in ("Date", "DateTime", "DateTime64(3)"):
                 ch_type = f"Nullable({ch_type})"
 
             columns_ddl.append(f"    `{col_name}` {ch_type}")

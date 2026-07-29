@@ -14,35 +14,26 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Intended Audience :: Developers",
-  "Topic :: Software Development :: Libraries :: Python Modules"
-]
+  "Topic :: Software Development :: Libraries :: Python Modules"]
 authors = [
-  { name = "Dmitry Romanov" }
-]
+  { name = "Dmitry Romanov" }]
 license = { text = "MIT" }
 dependencies = [
     "pandas",
     "numpy",
     "tqdm",
-    "requests"
-]
-
+    "requests"]
 [project.optional-dependencies]
 dev = [
     "black>=24.0.0",
     "isort>=5.13.0",
-    "radon>=7.0.0"
-]
-
+    "radon>=7.0.0"]
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["dp_tools"]
-
-
 [tool.black]
 target-version = ["py314"]
-line-length = 88
-
+line-length = 140
 [tool.flake8]
-max-line-length = 88
+max-line-length = 140
 

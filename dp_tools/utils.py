@@ -57,9 +57,7 @@ def report_nan(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(report)
 
 
-def create_df_from_folder(
-    folder_path: str, sheet_name: str | int = 0, dtype: dict | None = None
-) -> pd.DataFrame:
+def create_df_from_folder(folder_path: str, sheet_name: str | int = 0, dtype: dict | None = None) -> pd.DataFrame:
     """
     Считывает все файлы ``.xlsx`` из указанной папки и объединяет их в единый DataFrame.
 
@@ -119,9 +117,7 @@ def create_df_from_folder(
     return pd.concat(data_list)
 
 
-def rebuild_loss_data(
-    df: pd.DataFrame, index_col: list, column_name: str, value_name: str
-) -> pd.DataFrame:
+def rebuild_loss_data(df: pd.DataFrame, index_col: list, column_name: str, value_name: str) -> pd.DataFrame:
     """
     Выполняет трансформацию данных о потерях через сводную таблицу с обработкой нулевых значений.
 
@@ -184,9 +180,7 @@ def rebuild_loss_data(
     pivot_df = pivot_df.fillna(0)
 
     pivot_df_flat = pivot_df.reset_index()
-    pivot_df_flat = pd.melt(
-        pivot_df_flat, id_vars=index_col, var_name=column_name, value_name=value_name
-    )
+    pivot_df_flat = pd.melt(pivot_df_flat, id_vars=index_col, var_name=column_name, value_name=value_name)
 
     print(f"строк было: {len(df)}")
     print(f"строк стало: {len(pivot_df_flat)}")

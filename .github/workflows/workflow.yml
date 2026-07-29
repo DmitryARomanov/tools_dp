@@ -48,7 +48,7 @@ jobs:
         run: pip install build pytest black flake8
 
       - name: Lint
-        run: black --target-version py314 --check . && flake8 .
+        run: black --target-version py314 --check . && flake8 --max-line-length=140 .
 
       - name: Test
         run: pytest
