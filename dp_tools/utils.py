@@ -2,6 +2,7 @@ import pandas as pd
 from tqdm import tqdm
 import os
 
+
 def report_nan(df: pd.DataFrame) -> pd.DataFrame:
     """
     Формирует отчёт по количеству пропущенных и «пустых» значений в DataFrame.
@@ -40,19 +41,24 @@ def report_nan(df: pd.DataFrame) -> pd.DataFrame:
     for i in df.columns:
         if pd.api.types.is_object_dtype(df[i]) or pd.api.types.is_string_dtype(df[i]):
             s = df[i].astype(str)
-            is_blank = (s == '') | (s.str.strip() == '') | (df[i] == '(blank)')
+            is_blank = (s == "") | (s.str.strip() == "") | (df[i] == "(blank)")
         else:
-            is_blank = df[i] == '(blank)'
+            is_blank = df[i] == "(blank)"
 
-        report.append({
-            "column_name": i,
-            "na_count": int(df[i].isna().sum()),
-            "blank_count": int(is_blank.sum())
-        })
+        report.append(
+            {
+                "column_name": i,
+                "na_count": int(df[i].isna().sum()),
+                "blank_count": int(is_blank.sum()),
+            }
+        )
 
     return pd.DataFrame(report)
 
-def create_df_from_folder(folder_path:str, sheet_name: str | int = 0, dtype: dict | None = None) -> pd.DataFrame:
+
+def create_df_from_folder(
+    folder_path: str, sheet_name: str | int = 0, dtype: dict | None = None
+) -> pd.DataFrame:
     """
     Считывает все файлы ``.xlsx`` из указанной папки и объединяет их в единый DataFrame.
 
@@ -94,11 +100,11 @@ def create_df_from_folder(folder_path:str, sheet_name: str | int = 0, dtype: dic
     876
     """
 
-    data_list =[]
+    data_list = []
     if not os.path.exists(folder_path):
         return pd.DataFrame()
 
-    file_xlsx = [f for f in os.listdir(folder_path) if f.endswith('.xlsx')]
+    file_xlsx = [f for f in os.listdir(folder_path) if f.endswith(".xlsx")]
 
     with tqdm(total=len(file_xlsx), desc="Чтение Excel", unit="file") as pbar:
         for fname in file_xlsx:
@@ -109,9 +115,12 @@ def create_df_from_folder(folder_path:str, sheet_name: str | int = 0, dtype: dic
 
             pbar.update(1)
 
-    return pd.concat(data_list) 
+    return pd.concat(data_list)
 
-def rebuild_loss_data(df: pd.DataFrame, index_col: list, column_name: str, value_name: str) -> pd.DataFrame:
+
+def rebuild_loss_data(
+    df: pd.DataFrame, index_col: list, column_name: str, value_name: str
+) -> pd.DataFrame:
     """
     Выполняет трансформацию данных о потерях через сводную таблицу с обработкой нулевых значений.
 
@@ -166,7 +175,7 @@ def rebuild_loss_data(df: pd.DataFrame, index_col: list, column_name: str, value
         index=index_col,
         columns=column_name,
         values=value_name,
-        aggfunc='sum',
+        aggfunc="sum",
     )
 
     pivot_df = pivot_df.replace(0.0, np.nan)
@@ -175,16 +184,14 @@ def rebuild_loss_data(df: pd.DataFrame, index_col: list, column_name: str, value
 
     pivot_df_flat = pivot_df.reset_index()
     pivot_df_flat = pd.melt(
-        pivot_df_flat,
-        id_vars=index_col,
-        var_name=column_name,
-        value_name=value_name
+        pivot_df_flat, id_vars=index_col, var_name=column_name, value_name=value_name
     )
 
     print(f"строк было: {len(df)}")
     print(f"строк стало: {len(pivot_df_flat)}")
 
     return pivot_df_flat
+
 
 def iqr_flag_series(s, k=1.5):
     """
@@ -258,5 +265,3 @@ def iqr_flag_series(s, k=1.5):
     lower = q1 - k * iqr
     upper = q3 + k * iqr
     return ((s < lower) | (s > upper)).astype(int)
-
-

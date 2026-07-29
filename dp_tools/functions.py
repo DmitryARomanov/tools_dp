@@ -1,6 +1,9 @@
 import pandas as pd
 
-def create_and_insert_df(client, df: pd.DataFrame, table_name: str, order_by_cols: list | None = None):
+
+def create_and_insert_df(
+    client, df: pd.DataFrame, table_name: str, order_by_cols: list | None = None
+):
     """
     Подготавливает и вставляет DataFrame в таблицу базы данных.
     Если таблица существует, происходит очистка таблицы и вставка данных.
@@ -23,12 +26,12 @@ def create_and_insert_df(client, df: pd.DataFrame, table_name: str, order_by_col
         True, если вставка прошла успешно, иначе False.
     """
     if order_by_cols is None:
-        order_by_cols = ['tuple()']
+        order_by_cols = ["tuple()"]
 
     # 1. Проверяем, существует ли таблица в базе данных
     check_query = f"EXISTS TABLE {table_name}"
     result = client.command(check_query)
-    table_exists = (result and result[0] == 1)
+    table_exists = result and result[0] == 1
 
     if table_exists:
         print("🧹 Выполняем очистку таблицы...")
@@ -38,8 +41,8 @@ def create_and_insert_df(client, df: pd.DataFrame, table_name: str, order_by_col
         print(f"❌ Таблица '{table_name}' отсутствует. Генерируем DDL… 📜🗜️")
         columns_ddl = []
         for col_name, dtype in df.dtypes.items():
-            ch_type = "String"              
-            if pd.api.types.is_integer_dtype(dtype):                
+            ch_type = "String"
+            if pd.api.types.is_integer_dtype(dtype):
                 non_null = df[col_name].dropna()
                 if non_null.empty:
                     base_type = "UInt64"
@@ -61,7 +64,11 @@ def create_and_insert_df(client, df: pd.DataFrame, table_name: str, order_by_col
                 if not non_empty.empty:
                     first_val = non_empty.iloc[0]
                     if isinstance(first_val, pd.Timestamp):
-                        if first_val.hour == 0 and first_val.minute == 0 and first_val.second == 0:
+                        if (
+                            first_val.hour == 0
+                            and first_val.minute == 0
+                            and first_val.second == 0
+                        ):
                             ch_type = "Date"
                         else:
                             ch_type = "DateTime"
@@ -73,13 +80,17 @@ def create_and_insert_df(client, df: pd.DataFrame, table_name: str, order_by_col
                     ch_type = "String"
             else:
                 ch_type = "String"
-            
+
             has_nulls = df[col_name].isna().any()
             make_nullable = has_nulls or (col_name not in order_by_cols)
 
             if make_nullable and ch_type not in ("Date", "DateTime", "DateTime64(3)"):
                 ch_type = f"Nullable({ch_type})"
-            elif has_nulls and col_name not in order_by_cols and ch_type in ("Date", "DateTime", "DateTime64(3)"):
+            elif (
+                has_nulls
+                and col_name not in order_by_cols
+                and ch_type in ("Date", "DateTime", "DateTime64(3)")
+            ):
                 ch_type = f"Nullable({ch_type})"
 
             columns_ddl.append(f"    `{col_name}` {ch_type}")
@@ -105,5 +116,3 @@ def create_and_insert_df(client, df: pd.DataFrame, table_name: str, order_by_col
     except Exception as e:
         print(f"❌ Ошибка при вставке данных: {e}\n")
         return False
-
-

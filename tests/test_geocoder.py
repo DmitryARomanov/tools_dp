@@ -4,6 +4,7 @@ import responses
 
 from dp_tools.geocoder import get_geodata
 
+
 @responses.activate
 def test_get_geodata_single_location_required_columns():
     mock_result = {
@@ -19,7 +20,6 @@ def test_get_geodata_single_location_required_columns():
         url="https://geocoding-api.open-meteo.com/v1/search",
         json={"results": [mock_result]},
         status=200,
-
     )
 
     df = get_geodata("Владивосток")
@@ -29,7 +29,6 @@ def test_get_geodata_single_location_required_columns():
 
     required_cols = ["name", "latitude", "longitude", "timezone"]
     assert all(col in df.columns for col in required_cols)
-
 
     row = df.iloc[0]
     assert row["name"] == "Владивосток"
@@ -59,7 +58,7 @@ def test_get_geodata_list_locations_required_columns():
         name = request.params.get("name")
         for r in mock_results:
             if r["name"] == name:
-                return 200, {}, '{"results": [' + str(r).replace("'", '"') + ']}'
+                return 200, {}, '{"results": [' + str(r).replace("'", '"') + "]}"
         return 404, {}, '{"results": []}'
 
     responses.add_callback(

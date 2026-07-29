@@ -3,13 +3,11 @@ import pandas as pd
 import requests
 
 
-
-
 def get_geodata(location: str | list, verify=True) -> pd.DataFrame:
     data_list = []
     if isinstance(location, list):
         for item in location:
-            encoded_str = quote(f'{item}')
+            encoded_str = quote(f"{item}")
             url = f"https://geocoding-api.open-meteo.com/v1/search?name={encoded_str}&count=100&language=ru&format=json&countryCode=RU"
             resp = requests.get(url, verify=verify)
             resp.raise_for_status()
@@ -26,4 +24,3 @@ def get_geodata(location: str | list, verify=True) -> pd.DataFrame:
         tmp = resp.json()["results"][0]
         res = pd.DataFrame(pd.Series(tmp).to_frame().T)
     return res
-
