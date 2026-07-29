@@ -37,11 +37,13 @@ jobs:
         env:
           PYTEST_ADDOPTS: "-p no:warnings"
 
-      - name: Publish Test Results
-        uses: actions/junit-reporter@v6
+      - name: Publish Test Results to GitHub
+        uses: mikepenz/action-junit-report@v4
+        if: always()
         with:
-          report_paths: 'test-result.xml'
+          report_paths: test-result.xml
           check_name: PyTest Results
+          github_token: \${{ secrets.GITHUB_TOKEN }}
 
   build:
     name: Build distribution 📦
