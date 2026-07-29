@@ -20,14 +20,12 @@ authors = [
 dependencies = [
     "pandas",
     "tqdm",
-    "requests",
-    "subprocess",
-    "sys"
+    "requests"
 ]
 license = "MIT"
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = "."
 include = ["dp_tools"]
 exclude = ["my_module*", "*.ipynb", "__pycache__*"]
 
