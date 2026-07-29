@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "demand-tools"
 version = "0.2.7"
-description = "Набор функций для работы датафреймами и загрузки данных"
+description = "Набор функций для работы с датафреймами и загрузки данных"
 requires-python = ">=3.9"
 readme = "README.md"
 keywords = ["pandas", "data-processing"]
@@ -13,25 +13,27 @@ classifiers = [
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 authors = [
-  {name = "Dmitry Romanov"}
+  { name = "Dmitry Romanov" }
 ]
+license = { text = "MIT" }
 dependencies = [
-    "pandas",
-    "tqdm",
-    "requests"
+    "pandas>=2.0.0",
+    "tqdm>=4.66.0",
+    "requests>=2.32.0"
 ]
-license = "MIT"
-
-[tool.setuptools.packages.find]
-where = "."
-include = ["dp_tools"]
-exclude = ["my_module*", "*.ipynb", "__pycache__*"]
 
 [project.optional-dependencies]
 dev = [
-    "black",
-    "isort",
-    "radon"
+    "black>=24.0.0",
+    "isort>=5.13.0",
+    "radon>=7.0.0"
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["dp_tools"]
+
