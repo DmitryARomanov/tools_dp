@@ -2,7 +2,9 @@ name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
 
 on:
   push:
-    branches: ["main","dev"]
+    branches:
+      - "dev"
+      - "main"
     tags: ["v*"]
 
 
