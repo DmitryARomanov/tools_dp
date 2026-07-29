@@ -3,8 +3,8 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dp_tools"
-version = "0.2.5"
+name = "demand-tools"
+version = "0.2.6"
 description = "Набор функций для работы датафреймами и загрузки данных"
 requires-python = ">=3.9"
 authors = [
